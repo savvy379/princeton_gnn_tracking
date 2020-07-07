@@ -34,6 +34,6 @@ This repository implements multiple Graph Neural Network architectures designed 
 ### Track Finding
 
 ## References
-[1] "HL-LHC Tracking Challenge", [talk](https://cds.cern.ch/record/2312314?ln=en) by Jean-Roch Vlimant
-[2] "Tracking performance with the HL-LHC ATLAS detector", [paper](https://cds.cern.ch/record/2683174) by the ATLAS Collaboration
+[1] "HL-LHC Tracking Challenge", [talk](https://cds.cern.ch/record/2312314?ln=en) by Jean-Roch Vlimant  
+[2] "Tracking performance with the HL-LHC ATLAS detector", [paper](https://cds.cern.ch/record/2683174) by the ATLAS Collaboration  
 [3] "Expected Performance of Tracking in CMS at the HL-LHC", [paper](https://www.epj-conferences.org/articles/epjconf/abs/2017/19/epjconf_ctdw2017_00001/epjconf_ctdw2017_00001.html) by the CMS Collaboration
