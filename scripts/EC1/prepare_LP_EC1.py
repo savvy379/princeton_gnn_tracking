@@ -11,7 +11,7 @@ import logging
 import multiprocessing as mp
 from functools import partial
 import sys
-sys.path.append(os.path.abspath(os.path.join('...')))
+sys.path.append('../')
 
 # Externals
 import yaml

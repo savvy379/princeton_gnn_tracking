@@ -20,7 +20,7 @@ import pandas as pd
 import trackml.dataset
 
 # Locals
-from models.graph import Graph, save_graphs
+from models.EC1.graph import Graph, save_graphs
 
 def parse_args():
     """Parse command line arguments."""

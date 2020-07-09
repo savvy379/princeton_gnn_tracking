@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import Dataset, random_split
 
 # Local imports
-from models.graph import load_graph
+from models.EC1.graph import load_graph
 
 class HitGraphDataset(Dataset):
     """PyTorch dataset specification for hit graphs"""

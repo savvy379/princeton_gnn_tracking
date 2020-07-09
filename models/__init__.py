@@ -24,7 +24,7 @@ def get_data_loaders(name, batch_size, distributed=False,
         from .dummy import get_datasets
         train_dataset, valid_dataset = get_datasets(**data_args)
     elif name == 'hitgraphs':
-        from . import hitgraphs
+        from .EC1 import hitgraphs
         train_dataset, valid_dataset = hitgraphs.get_datasets(**data_args)
         collate_fn = hitgraphs.collate_fn
     else:
