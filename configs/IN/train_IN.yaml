@@ -1,0 +1,11 @@
+model_outdir: /tigress/jdezoort/IN_output/trained_models
+plot_outdir: /tigress/jdezoort/IN_output/plots
+verbose: 1
+n_epoch: 750
+batch_size: 10
+prep: 'LP'
+pt_cut: '2'
+save_every_n_epoch: 50
+save_last_n_epoch: 100
+phi_reflect: false
+tag: 'thin_tanh_LRe03_recurrent'
