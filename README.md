@@ -28,11 +28,14 @@ In both commands, 'XX' should be replaced with the name of your chosen model. Th
 ### TrackML Data
 All example code in this repository uses the CERN [TrackML Challenge](https://www.kaggle.com/c/trackml-particle-identification/overview) dataset. Each event is separated into four files: cells, hits, particles, and truth; we rely on hits to build the graphs and particles + truth to define the training labels. 
 
-The data is simulated using a toy detector that roughly approximates the ATLAS detector. It is divided into modules (detector components) each of which is then divided into several layers as shown below. Here, we focus on the inner-most pixel layers, but this can be adjusted in the prepare.py scripts. 
+The data is simulated at high pileup using a toy detector that roughly approximates the ATLAS detector. It is divided into modules (detector components) each of which is then divided into several layers as shown below. Here, we focus on the inner-most pixel layers, but this can be adjusted in the prepare.py scripts. 
 
 ![Detector layout](https://asalzbur.web.cern.ch/asalzbur/work/tml/Detector.png)
 
 ### Data Preprocessing
+Each TrackML event is converted into a directed multigraph of hits connected by segments. Different pre-processing strategies are available, each with different graph construction efficiencies. This repo contains two such stratigies:
+   1) Select one hit per particle per layer, connect hits in adjacent layers. This is the strategy used by the [HEP.TrkX collaboration](https://heptrkx.github.io/), which we denote "layer pairs" (see **prep_LP.py**) [2]. 
+   2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other (see **prep_LPP.py**).
 
 ## GNNs and Training
 
