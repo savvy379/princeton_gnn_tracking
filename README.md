@@ -30,6 +30,8 @@ All example code in this repository uses the CERN [TrackML Challenge](https://ww
 
 The data is simulated using a toy detector that roughly approximates the ATLAS detector. It is divided into modules (detector components) each of which is then divided into several layers as shown below. Here, we focus on the inner-most pixel layers, but this can be adjusted in the prepare.py scripts. 
 
+![Detector layout](https://asalzbur.web.cern.ch/asalzbur/work/tml/Detector.png)
+
 ### Data Preprocessing
 
 ## GNNs and Training
