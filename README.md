@@ -26,6 +26,9 @@ In both commands, 'XX' should be replaced with the name of your chosen model. Th
 ## Dataset and Graph Construction
 
 ### TrackML Data
+All example code in this repository uses the CERN [TrackML Challenge](https://www.kaggle.com/c/trackml-particle-identification/overview) dataset. Each event is separated into four files: cells, hits, particles, and truth; we rely on hits to build the graphs and particles + truth to define the training labels. 
+
+The data is simulated using a toy detector that roughly approximates the ATLAS detector. It is divided into modules (detector components) each of which is then divided into several layers as shown below. Here, we focus on the inner-most pixel layers, but this can be adjusted in the prepare.py scripts. 
 
 ### Data Preprocessing
 
