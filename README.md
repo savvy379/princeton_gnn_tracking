@@ -63,6 +63,7 @@ The scripts **train_XX.py** build and train the specified GNN on preprocessed Tr
 The training data is organized into mini-batches, which are used to optimize the loss fuction specified in your config file using your selected optimizer. The network is then tested on a separate sample of pre-processed graphs. The results of the trained network can be tested using various scripts described in the **Analyses** Section below. 
 
 ### Slurm Scripts
+In the `slurm` folder we provide scripts to submit the pre-processing and training processes as jobs on a slurm-based job submission system.
 
 ## Analyses
 
