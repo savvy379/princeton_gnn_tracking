@@ -34,8 +34,8 @@ The data is simulated at high pileup using a toy detector that roughly approxima
 
 ### Data Preprocessing
 Each TrackML event is converted into a directed multigraph of hits connected by segments. Different pre-processing strategies are available, each with different graph construction efficiencies. This repo contains two such stratigies:
-   1) Select one hit per particle per layer, connect hits in adjacent layers. This is the strategy used by the [HEP.TrkX collaboration](https://heptrkx.github.io/), which we denote "layer pairs" (see **prep_LP.py**) [2]. 
-   2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other (see **prep_LPP.py**).
+   1) Select one hit per particle per layer, connect hits in adjacent layers. This is the strategy used by the [HEP.TrkX collaboration](https://heptrkx.github.io/), which we denote "layer pairs (LP)" (see **prep_LP.py**). 
+   2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other. This is called "layer pairs plus (LPP)" (see **prep_LPP.py**).
 
 ## GNNs and Training
 The models folder contains the structures to create graphs and multiple GNN models.   
