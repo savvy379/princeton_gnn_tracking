@@ -48,14 +48,14 @@ The models folder contains the structures to create graphs and multiple GNN mode
 
 ### Models
 
-#### Edge Classifier
+#### Edge Classifier 1 [EC1]
 This model is based on the 2018 ExaTrkX [paper](https://arxiv.org/abs/1810.06111) which imploys a set of recurrent iterations of alternation EdgeNetwork and NodeNetwork components:
 * **NodeNetwork:** computes new features for every node using the edge weight aggregated features of the connected nodes on the previous and next detector layers separately as well as the nodes' current features (a traditional [Graph Convolutional Network](https://tkipf.github.io/graph-convolutional-networks/)
 * **Edge Network:** computes weights for every edge of the graph using the features of the start and end nodes.
 
 ![EC1](https://github.com/savvy379/princeton_gnn_tracking/blob/master/Screen%20Shot%202020-07-09%20at%201.53.49%20PM.png)
 
-#### Interaction Network
+#### Interaction Network [IN]
 
 ### Training
 The scripts **train_XX.py** build and train the specified GNN on preprocessed TrackML graphs. The training definitions for each model live in the **models/trainers** folder.
