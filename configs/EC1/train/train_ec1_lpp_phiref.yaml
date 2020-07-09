@@ -1,0 +1,26 @@
+output_dir: /tigress/sthais/trained_gnns/trained_EC1_LPP_2GeV_600epochs_4iter_June2020_phiref
+
+trainer:
+    name: gnn
+    real_weight: 5.0   # 0.5 / 0.1
+    fake_weight: 0.555 # 0.5 / 0.9
+
+data:
+    name: hitgraphs
+    input_dir: /tigress/sthais/input_graphs/lpp_graphs_2_1000evts_June2020_phireflect
+    n_train: 800
+    n_valid: 200
+    batch_size: 10
+    n_workers: 1
+
+model:
+    name: 'gnn_segment_classifier'
+    input_dim: 3
+    hidden_dim: 128
+    n_iters: 4
+    loss_func: 'binary_cross_entropy'
+    optimizer: 'Adam'
+    learning_rate: 0.001
+
+training:
+    n_epochs: 600
