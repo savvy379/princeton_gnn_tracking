@@ -38,14 +38,26 @@ Each TrackML event is converted into a directed multigraph of hits connected by 
    2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other (see **prep_LPP.py**).
 
 ## GNNs and Training
+The models folder contains the structures to create graphs and multiple GNN models.   
+ **model/graph.py**: defines a graph as a namedTuple containing:
+    * **x**:   a size (N<sub>hits</sub> x 3) feature vector for each hit, containing the hit coordinates (r, phi, z)
+    * **R_i**: a size (N<sub>hits</sub> x N<sub>segs</sub>) matrix whose entries (**R_i**)<sub>hs</sub> are 1 when segment s is incoming to hit h, and 0 otherwise
+    * **R_o**: a size (N<sub>hits</sub> x N<sub>segs</sub>) matrix whose entries (**R_i**)<sub>hs</sub> are 1 when segment s is outgoing from hit h, and 0 otherwise
+    * **a (only for Interaction Network)**:   a size (N<sub>segs</sub> x 1) vector whose s<sup>th</sup> entry is 0 if the segment s connects opposite-layer hits and 1 if segment s connects same-layer hits
 
 ### Models
 
 #### Edge Classifier
+This model is based on the 2018 ExaTrkX [paper](https://arxiv.org/abs/1810.06111) which imploys a set of recurrent iterations of alternation EdgeNetwork and NodeNetwork components:
+* **NodeNetwork:** computes new features for every node using the edge weight aggregated features of the connected nodes on the previous and next detector layers separately as well as the nodes' current features (a traditional [Graph Convolutional Network](https://tkipf.github.io/graph-convolutional-networks/)
+* **Edge Network:** computes weights for every edge of the graph using the features of the start and end nodes.
 
 #### Interaction Network
 
 ### Training
+The scripts **train_XX.py** build and train the specified GNN on preprocessed TrackML graphs. The training definitions for each model live in the **models/trainers** folder.
+
+The training data is organized into mini-batches, which are used to optimize the loss fuction specified in your config file using your selected optimizer. The network is then tested on a separate sample of pre-processed graphs. The results of the trained network can be tested using various scripts described in the **Analyses** Section below. 
 
 ### Slurm Scripts
 
