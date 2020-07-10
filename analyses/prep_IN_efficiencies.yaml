@@ -1,0 +1,9 @@
+model: IN 
+strategy: LP
+graph_dir: /tigress/jdezoort/IN_samples_large 
+n_events: 1000
+truth_file: truth/truth_LP.txt
+pt_cuts:
+  - '0p5'
+  - '1'
+  - '2'
