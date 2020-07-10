@@ -34,28 +34,31 @@ The data is simulated at high pileup using a toy detector that roughly approxima
 
 ### Data Preprocessing
 Each TrackML event is converted into a directed multigraph of hits connected by segments. Different pre-processing strategies are available, each with different graph construction efficiencies. This repo contains two such stratigies:
-   1) Select one hit per particle per layer, connect hits in adjacent layers. This is the strategy used by the [HEP.TrkX collaboration](https://heptrkx.github.io/), which we denote "layer pairs (LP)" (see **prep_LP.py**). 
-   2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other. This is called "layer pairs plus (LPP)" (see **prep_LPP.py**).
+   1) Select one hit per particle per layer, connect hits in adjacent layers. This is the strategy used by the [HEP.TrkX collaboration](https://heptrkx.github.io/), which we denote "layer pairs (LP)" (see **prepare_LP.py**). 
+   2) Select hits between adjacent layers *and* hits within the same layer, requiring that same-layer hits are within some distance dR of each other. This is called "layer pairs plus (LPP)" (see **prepare_LPP.py**).
 
 ## GNNs and Training
-The models folder contains the structures to create graphs and multiple GNN models.   
+The models folder contains the structures to create graphs and multiple GNN models. The graphs are defined on a per-model basis, but all share four common attributes: a vector of hit features, a matrix representing incoming segments, a matrix representing outgoing segments, and a binary segment truth vector (**x**, **R_i**, **R_o**, and **y** respectively). 
 
-**model/graph.py**: defines a graph as a namedTuple containing:  
+**model/XX/graph.py**: defines a graph as a namedTuple containing:  
 * **x**:   a size (N<sub>hits</sub> x 3) feature vector for each hit, containing the hit coordinates (r, phi, z). 
 * **R_i**: a size (N<sub>hits</sub> x N<sub>segs</sub>) matrix whose entries (**R_i**)<sub>hs</sub> are 1 when segment s is incoming to hit h, and 0 otherwise. 
 * **R_o**: a size (N<sub>hits</sub> x N<sub>segs</sub>) matrix whose entries (**R_i**)<sub>hs</sub> are 1 when segment s is outgoing from hit h, and 0 otherwise. 
-* **a (only for Interaction Network)**:   a size (N<sub>segs</sub> x 1) vector whose s<sup>th</sup> entry is 0 if the segment s connects opposite-layer hits and 1 if segment s connects same-layer hits. 
+* **R_a** (IN only): a size (N<sub>segs</sub> x 1) vector whose s<sup>th</sup> entry is 0 if the segment s connects opposite-layer hits and 1 if segment s connects same-layer hits. 
 
 ### Models
 
 #### Edge Classifier 1 [EC1]
 This model is based on the 2018 ExaTrkX [paper](https://arxiv.org/abs/1810.06111) which imploys a set of recurrent iterations of alternation EdgeNetwork and NodeNetwork components:
-* **NodeNetwork:** computes new features for every node using the edge weight aggregated features of the connected nodes on the previous and next detector layers separately as well as the nodes' current features (a traditional [Graph Convolutional Network](https://tkipf.github.io/graph-convolutional-networks/)
-* **Edge Network:** computes weights for every edge of the graph using the features of the start and end nodes.
+* **NodeNetwork**: computes new features for every node using the edge weight aggregated features of the connected nodes on the previous and next detector layers separately as well as the nodes' current features (a traditional [Graph Convolutional Network](https://tkipf.github.io/graph-convolutional-networks/)
+* **Edge Network**: computes weights for every edge of the graph using the features of the start and end nodes.
 
 ![EC1](https://github.com/savvy379/princeton_gnn_tracking/blob/master/Screen%20Shot%202020-07-09%20at%201.53.49%20PM.png)
 
 #### Interaction Network [IN]
+The IN is based on the model outlined in [arXiv:1612.00222](https://arxiv.org/abs/1612.00222). In essence, the IN is a GNN architecture that applies relational and object models in stages to infer abstract interactions and object dynamics. We extend the paper's definition of an IN to include a recurrent structure, which involves repitions of the following cycle: marshall hits and segments into interaction terms, apply relational model to interaction terms to produce effects, aggregate effects across incoming segments to each hit, apply object model on hits and effects to produce re-embedded hit features, re-marshall the re-embedded hits, and apply the relational model a second time to produce edge weights (truth probabilities) for each segment. This cycle is formally defined in **model/IN/interaction_network.py**, which depends on the following relational and object models: 
+*   **model/IN/relational_model.py**: a MLP that outputs 1 parameter per segment, which we interpret as an edge weight
+*   **model/IN/object_model.py**: a MLP that outputs 3 parameters per hit, which are the re-embedded position features of the hit
 
 ### Training
 The scripts **train_XX.py** build and train the specified GNN on preprocessed TrackML graphs. The training definitions for each model live in the **models/trainers** folder.
@@ -79,3 +82,4 @@ In the `slurm` folder we provide scripts to submit the pre-processing and traini
 [1] "HL-LHC Tracking Challenge", [talk](https://cds.cern.ch/record/2312314?ln=en) by Jean-Roch Vlimant  
 [2] "Tracking performance with the HL-LHC ATLAS detector", [paper](https://cds.cern.ch/record/2683174) by the ATLAS Collaboration  
 [3] "Expected Performance of Tracking in CMS at the HL-LHC", [paper](https://www.epj-conferences.org/articles/epjconf/abs/2017/19/epjconf_ctdw2017_00001/epjconf_ctdw2017_00001.html) by the CMS Collaboration
+[4] “Interaction networks for learning about objects relations and physics”, [arXiv:1612.00222](https://arxiv.org/abs/1612.00222)
