@@ -69,14 +69,19 @@ The training data is organized into mini-batches, which are used to optimize the
 In the `slurm` folder we provide scripts to submit the pre-processing and training processes as jobs on a slurm-based job submission system.
 
 ## Analyses
+The **analyses** folder contains measurement scripts and plotting functions. Different tools are defined for the different stages of this project, namely graph construction (the "prepare" stage), model training (the "train" stage), and track finding (the "tracking" stage). 
 
-### Graph Construction Metrics
+### Graph Construction Measurements
+Graph construction efficiencies depend on the specific graph construction method. For this reason, we have defined two scripts that generate the true number of segments we'd expect from a single constructed graph (for various pt cuts ranging between 0.5 and 5 GeV): **analyses/truth/generate_truth_LP.py** and **analyses/truth/generate_truth_LPP.py**. Graph construction involves cuts that diminish the number of true segments in our graphs, so it is important to know how many we started wtih. This information is stored in "truth tables," which are used as inputs to the graph construction measurement script:
+* **analyses/prepare_efficiencies.py**: calculate and plot key graph construction metrics, including segment efficiency (defined as sum(**y**)/len(**y**) for each graph), truth efficiency (defined as sum(**y**)/total_true for each graph), graph size, hits per graph, and nodes per graph.
 
-### Model Metrics
+The plotting functions themselves are contained in **analyses/prepare_plots.py**. YAML files like **anlyses/prepare_efficiencies_IN.yaml** specify the model and graph construction strategy we're interested in. 
 
-### Visualizations
+### Model Training Measurements
+Several post-training plots and metrics are defined in **analyses/training_plots.py**, including loss-per-epoch plots, color-coded r-z and x-y views of the classified segments, confusion matrix entries plotted as a function of edge weight cut ("discriminant" value), true/false edges plotted as a function of edge weight, and ROC curves. These plots are key to evaluating our models, and are produced in scripts like **plot_IN.py**. 
 
-### Track Finding
+### Track Finding Measurements
+Upcoming - stay tuned! 
 
 ## References
 [1] "HL-LHC Tracking Challenge", [talk](https://cds.cern.ch/record/2312314?ln=en) by Jean-Roch Vlimant  
