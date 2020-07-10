@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from scipy.stats import poisson
 
-import prep_plot_menu as plots
+import prepare_plots as plots
 
-parser = argparse.ArgumentParser('prep_efficiencies.py')
+parser = argparse.ArgumentParser('prepare_efficiencies.py')
 add_arg = parser.add_argument
-add_arg('config', nargs='?', default='prep_IN_efficiencies.yaml')
+add_arg('config', nargs='?', default='prepare_efficiencies_IN.yaml')
 args = parser.parse_args()
 with open(args.config) as f:
     config = yaml.load(f, yaml.FullLoader)

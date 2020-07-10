@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 
 from models.IN.interaction_network import InteractionNetwork
 from models.IN.graph import Graph, save_graphs, load_graph
-import scripts.IN.plot_menu as pm
+import analyses.training_plots as plots
 
 def parse_args():
     """Parse command line arguments."""
@@ -91,7 +91,7 @@ for i, model in enumerate(models):
     losses.append(loss.item())
     print("Model {0} (Epoch #{1}):".format(model, n_epoch-i), loss.item())
 
-pm.plot_losses(epochs, losses, "{0}/{1}_test_losses.png".format(plot_dir, job_name))
+plots.plot_losses(epochs, losses, "{0}/{1}_test_losses.png".format(plot_dir, job_name))
   
 best_idx = np.argsort(np.array(losses))[0]   
 print("\nBest Loss:", losses[best_idx])
@@ -118,38 +118,38 @@ fake_seg_idx = (target==0).nonzero()[:][0]
 fake_seg = predicted[fake_seg_idx]
 
 # order some plots
-pm.plotDiscriminant(real_seg, fake_seg, 20, "{0}/discriminant_{1}.png".format(plot_dir, job_name))
+plots.plotDiscriminant(real_seg, fake_seg, 20, "{0}/discriminant_{1}.png".format(plot_dir, job_name))
 
 for i in np.arange(0, 1, 0.01):
-    testConfusion = pm.confusionMatrix(real_seg, fake_seg, i)
+    testConfusion = plots.confusionMatrix(real_seg, fake_seg, i)
     print(i, testConfusion)
 
 sort_idx = np.argsort(losses)
 
-pm.confusionPlot(real_seg, fake_seg, "{0}/confusions_{1}.png".format(plot_dir, job_name))
-pm.plotROC(real_seg, fake_seg, "{0}/ROC_{1}.png".format(plot_dir, job_name))
+plots.confusionPlot(real_seg, fake_seg, "{0}/confusions_{1}.png".format(plot_dir, job_name))
+plots.plotROC(real_seg, fake_seg, "{0}/ROC_{1}.png".format(plot_dir, job_name))
 
 for num, i in enumerate(sort_idx[-3:]):
     print("#{0}, loss={1}".format(num, losses[i]))
-    pm.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/rz_worst{1}_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/rz_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/xy_worst{1}_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/xy_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
-                     highlight_errors=True)
+    plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/rz_worst{1}_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/rz_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/xy_worst{1}_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/xy_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
+                        highlight_errors=True)
     
 for num, i in enumerate(sort_idx[:3]):
     print("#{0}, loss={1}".format(num, losses[i]))
-    pm.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/rz_best{1}_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/rz_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/xy_best{1}_{2}.png".format(plot_dir, num, job_name))
-    pm.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                     filename="{0}/xy_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
-                     highlight_errors=True)
+    plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/rz_best{1}_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/rz_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/xy_best{1}_{2}.png".format(plot_dir, num, job_name))
+    plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
+                        filename="{0}/xy_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
+                        highlight_errors=True)
 
