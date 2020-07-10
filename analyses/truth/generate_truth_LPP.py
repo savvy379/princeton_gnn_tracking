@@ -17,7 +17,13 @@ from trackml.dataset import load_dataset
 verbose = True
 
 # break down the input files into event_ids
-data_dir = "/home/sthais/data/sample"
+verbose = True
+parser = argparse.ArgumentParser('generate_truth_LP.py')
+add_arg = parser.add_argument
+add_arg('path', nargs='?', default='/home/sthais/data/sample')
+args = parser.parse_args()
+data_dir = args.path
+
 files = [f for f in listdir(data_dir)]
 files = [f.split('.')[0] for f in files if "hits" in f]
 evt_ids = [f.split('-')[0] for f in files]
