@@ -15,40 +15,47 @@ from models.IN.relational_model import RelationalModel
 from models.IN.object_model import ObjectModel
 
 class InteractionNetwork(nn.Module):
-    def __init__(self, object_dim, relation_dim, effect_dim):
+    def __init__(self, object_dim, relation_dim, effect_dim, n_recur=1):
         super(InteractionNetwork, self).__init__()
         
         self.relational_model = RelationalModel(2*object_dim + relation_dim, effect_dim, 150)
         self.object_model = ObjectModel(object_dim + effect_dim, 100)
-        
+        self.n_recur = n_recur
+
     def forward(self, objects, sender_relations, receiver_relations, relation_info):
-        N = len(objects)
-    
-        senders   = [torch.matmul(objects[i].t(), sender_relations[i]) 
-                     for i in range(N)]
-        receivers = [torch.matmul(objects[i].t(), receiver_relations[i]) 
-                     for i in range(N)]
+
+        batch_size = len(objects)
+        for i in range(self.n_recur):
+
+            # marshalling step: build interaction terms
+            senders   = [torch.matmul(objects[i].t(), sender_relations[i]) 
+                         for i in range(batch_size)]
+            receivers = [torch.matmul(objects[i].t(), receiver_relations[i]) 
+                         for i in range(batch_size)]
+            interaction_terms = [torch.cat([senders[i], receivers[i], relation_info[i]]) 
+                                 for i in range(batch_size)]
         
-        interaction_terms = [torch.cat([senders[i], receivers[i], relation_info[i]]) 
-                             for i in range(N)]
+            # relational model: determine effects
+            effects = self.relational_model(interaction_terms)
         
-        effects = self.relational_model(interaction_terms)
+            # aggregation step: aggregate effects
+            effects_receivers = [torch.matmul(receiver_relations[i], effects[i]).t() 
+                                 for i in range(batch_size)]
+            aggregated = [torch.cat([objects[i].t(), effects_receivers[i]]) 
+                          for i in range(batch_size)]
         
-        effects_receivers = [torch.matmul(receiver_relations[i], effects[i]).t() 
-                             for i in range(N)]
-        aggregated = [torch.cat([objects[i].t(), effects_receivers[i]]) 
-                      for i in range(N)]
+            # object model: re-embed hit features
+            reembeded_objects = self.object_model(aggregated)
+            reembeded_objects = [reembeded_objects[i].t() for i in range(batch_size)]
         
-        predicted = self.object_model(aggregated)
-        predicted = [predicted[i].t() for i in range(N)]
+            # re-marshalling step: build new interaction terms
+            senders = [torch.matmul(reembeded_objects[i], sender_relations[i]) 
+                       for i in range(batch_size)]
+            receivers = [torch.matmul(reembeded_objects[i], receiver_relations[i]) 
+                         for i in range(batch_size)]
+            interaction_terms = [torch.cat([senders[i], receivers[i], relation_info[i]])
+                                 for i in range(batch_size)]
         
-        senders = [torch.matmul(predicted[i], sender_relations[i]) 
-                   for i in range(N)]
-        receivers = [torch.matmul(predicted[i], receiver_relations[i]) 
-                     for i in range(N)]
-        
-        interaction_terms = [torch.cat([senders[i], receivers[i], relation_info[i]])
-                             for i in range(N)]
-        
-        predicted = self.relational_model(interaction_terms)
-        return predicted
+            edge_weights = self.relational_model(interaction_terms)
+
+        return edge_weights

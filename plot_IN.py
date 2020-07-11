@@ -118,7 +118,7 @@ fake_seg_idx = (target==0).nonzero()[:][0]
 fake_seg = predicted[fake_seg_idx]
 
 # order some plots
-plots.plotDiscriminant(real_seg, fake_seg, 20, "{0}/discriminant_{1}.png".format(plot_dir, job_name))
+plots.plotDiscriminant(real_seg, fake_seg, 20, "{0}/{1}_discriminant.png".format(plot_dir, job_name))
 
 for i in np.arange(0, 1, 0.01):
     testConfusion = plots.confusionMatrix(real_seg, fake_seg, i)
@@ -126,30 +126,30 @@ for i in np.arange(0, 1, 0.01):
 
 sort_idx = np.argsort(losses)
 
-plots.confusionPlot(real_seg, fake_seg, "{0}/confusions_{1}.png".format(plot_dir, job_name))
-plots.plotROC(real_seg, fake_seg, "{0}/ROC_{1}.png".format(plot_dir, job_name))
+plots.confusionPlot(real_seg, fake_seg, "{0}/{1}_confusions.png".format(plot_dir, job_name))
+plots.plotROC(real_seg, fake_seg, "{0}/{1}_ROC.png".format(plot_dir, job_name))
 
 for num, i in enumerate(sort_idx[-3:]):
     print("#{0}, loss={1}".format(num, losses[i]))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/rz_worst{1}_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_rz_worst{2}.png".format(plot_dir, job_name, num))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/rz_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_rz_worst{2}_showErrors.png".format(plot_dir, job_name, num))
     plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/xy_worst{1}_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_xy_worst{2}.png".format(plot_dir, job_name, num))
     plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/xy_worst{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
+                        filename="{0}/{1}_xy_worst{2}_showErrors.png".format(plot_dir, job_name, num),
                         highlight_errors=True)
     
 for num, i in enumerate(sort_idx[:3]):
     print("#{0}, loss={1}".format(num, losses[i]))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/rz_best{1}_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_rz_best{2}.png".format(plot_dir, job_name, num))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/rz_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_rz_best{2}_showErrors.png".format(plot_dir, job_name, num))
     plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/xy_best{1}_{2}.png".format(plot_dir, num, job_name))
+                        filename="{0}/{1}_xy_best{2}.png".format(plot_dir, job_name, num))
     plots.draw_graph_xy(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
-                        filename="{0}/xy_best{1}_showErrors_{2}.png".format(plot_dir, num, job_name),
+                        filename="{0}/{1}_xy_best{2}_showErrors.png".format(plot_dir, job_name, num),
                         highlight_errors=True)
 

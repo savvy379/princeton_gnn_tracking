@@ -61,15 +61,18 @@ args = parse_args()
 with open(args.config) as f:
     config = yaml.load(f, yaml.FullLoader)
 
+graph_indir  = config['graph_indir']
 model_outdir = config['model_outdir']
 plot_outdir  = config['plot_outdir']
-verbose = config['verbose']
+verbose      = config['verbose']
 prep, pt_cut = config['prep'], config['pt_cut']
-n_epoch, batch_size = config['n_epoch'], config['batch_size']
-save_every = config['save_every_n_epoch']
-save_last  = config['save_last_n_epoch']
-phi_reflect = config['phi_reflect']
-tag = config['tag']
+n_epoch      = config['n_epoch'] 
+batch_size   = config['batch_size']
+n_recur      = config['n_recur']
+save_every   = config['save_every_n_epoch']
+save_last    = config['save_last_n_epoch']
+phi_reflect  = config['phi_reflect']
+tag          = config['tag']
 
 # job name, ex. "LP_0p5_1200"
 job_name = "{0}_{1}_{2}_{3}".format(prep, pt_cut, n_epoch, tag)
@@ -80,10 +83,10 @@ if (verbose):
     print(' ... writing plots to', plot_outdir)
 
 # pull 1000 graphs from the train_1 sample
-graph_dir = "/tigress/jdezoort/IN_samples_large/IN_{0}_{1}/".format(prep, pt_cut)
+graph_dir = "{0}/IN_{1}_{2}/".format(graph_indir, prep, pt_cut)
 graphs = []
 if (phi_reflect):
-    phi_graph_dir = "/tigress/jdezoort/IN_samples_large/IN_{0}_{1}_phi_reflect/".format(prep, pt_cut)
+    phi_graph_dir = "{0}/IN_{1}_{2}_phi_reflect/".format(graph_indir, prep, pt_cut)
     graphs += get_graphs(phi_graph_dir)[0:800]
 graphs += get_graphs(graph_dir)
 
@@ -91,7 +94,7 @@ if (verbose): print(" ... n_graphs={0}".format(len(graphs)))
 
 # objects: (r, phi, z); relations: (0); effects: (weight) 
 object_dim, relation_dim, effect_dim = 3, 1, 1
-interaction_network = InteractionNetwork(object_dim, relation_dim, effect_dim)
+interaction_network = InteractionNetwork(object_dim, relation_dim, effect_dim, n_recur)
 criterion = torch.nn.BCELoss()
 optimizer = optim.Adam(interaction_network.parameters(), lr=0.001)
 
