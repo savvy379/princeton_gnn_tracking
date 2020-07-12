@@ -16,9 +16,18 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+
 import trackml
 from trackml.dataset import load_event
 from trackml.dataset import load_dataset
+
+
+# configure matplotlib
+font = {'family' : 'sans-serif',
+        'weight' : 'bold',
+        'size'   : 12}
+plt.rc('font', **font)
+plt.rc('text', usetex=True)
 
 
 def plotSingleHist(data, x_label, y_label, bins, weights=None, title='', color='blue'):
@@ -194,44 +203,6 @@ def plotTrackOverLayers(track, hits, plotModules):
         x, y, z = xyz[:,0], xyz[:,1], xyz[:,2]
         ax.plot(x,y,z, linestyle='', marker='h', markersize='0.5', color='mediumslateblue', alpha=0.5)
         ax.text(x[0], y[0], z[0], str(i), None, size=5)
-    plt.show()
-        
-
-def plotWholeDetector():
-    volume_ids = [7,8,9]
-    detectors = pd.read_csv('../data/detectors.csv')
-    detectors['xyz'] = detectors[['cx', 'cy', 'cz']].values.tolist()
-
-    volumes = detectors.groupby('volume_id')['xyz'].apply(list).to_frame()
-    accept_volumes = detectors[detectors.volume_id.isin(volume_ids)]
-
-    x_min, x_max = accept_volumes['cx'].min(), accept_volumes['cx'].max()
-    y_min, y_max = accept_volumes['cy'].min(), accept_volumes['cy'].max()
-    z_min, z_max = accept_volumes['cz'].min(), accept_volumes['cz'].max()
-
-    volumes_layers = accept_volumes.groupby(['volume_id','layer_id'])['xyz'].apply(list).to_frame()
-    fig = plt.figure(figsize=plt.figaspect(0.9))
-
-    ax = plt.axes(projection='3d')
-    ax.set_aspect('equal')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
-    ax.set_zlim(z_min, z_max)
-
-    ax.set_xlabel('x [mm]')
-    ax.set_ylabel('y [mm]')
-    ax.set_zlabel('z [mm]')
-
-    
-    #pixel_detector = detectors[detectors.volume_id.isin([7,8,9])]
-    pixel_detector = pixel_detector[pixel_detector.layer_id.isin([8])]
-    for index, row in pixel_detector.iterrows():
-        verts = getModuleCoords(row['volume_id'], row['layer_id'], row['module_id'])
-        ax.add_collection3d(Poly3DCollection(verts, facecolors='silver', linewidths=1, edgecolor='black'), zs='z')
-
     plt.show()
 
 
