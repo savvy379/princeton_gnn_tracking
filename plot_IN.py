@@ -129,7 +129,7 @@ sort_idx = np.argsort(losses)
 plots.confusionPlot(real_seg, fake_seg, "{0}/{1}_confusions.png".format(plot_dir, job_name))
 plots.plotROC(real_seg, fake_seg, "{0}/{1}_ROC.png".format(plot_dir, job_name))
 
-for num, i in enumerate(sort_idx[-3:]):
+for num, i in enumerate(sort_idx[-1:]):
     print("#{0}, loss={1}".format(num, losses[i]))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
                         filename="{0}/{1}_rz_worst{2}.png".format(plot_dir, job_name, num))
@@ -141,7 +141,7 @@ for num, i in enumerate(sort_idx[-3:]):
                         filename="{0}/{1}_xy_worst{2}_showErrors.png".format(plot_dir, job_name, num),
                         highlight_errors=True)
     
-for num, i in enumerate(sort_idx[:3]):
+for num, i in enumerate(sort_idx[:1]):
     print("#{0}, loss={1}".format(num, losses[i]))
     plots.draw_graph_rz(test_O[i], test_Rr[i], test_Rs[i], test_y[i].squeeze(), out[i].squeeze(),
                         filename="{0}/{1}_rz_best{2}.png".format(plot_dir, job_name, num))

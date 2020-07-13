@@ -19,7 +19,7 @@ import trackml.dataset
 import time
 
 # Locals
-from models.graph import Graph, save_graphs
+from models.IN.graph import Graph, save_graphs
 
 def parse_args():
     """Parse command line arguments."""
@@ -120,10 +120,16 @@ def construct_graph(hits, layer_pairs,
     # Return a tuple of the results
     return Graph(X, Ri, Ro, y, a)
 
-def select_hits(hits, truth, particles, pt_min=0):
+def select_hits(hits, truth, particles, pt_min=0, endcaps=False):
     # Barrel volume and layer ids
     vlids = [(8,2), (8,4), (8,6), (8,8)]
+    if (endcaps): vlids.extend([(7,2), (7,4), (7,6), (7,8), 
+                                (7,10), (7,12), (7,14),
+                                (9,2), (9,4), (9,6), (9,8),
+                                (9,10), (9,12), (9,14)])
     n_det_layers = len(vlids)
+    print("running on", vlids)
+
     # Select barrel layers and assign convenient layer number [0-9]
     vlid_groups = hits.groupby(['volume_id', 'layer_id'])
     hits = pd.concat([vlid_groups.get_group(vlids[i]).assign(layer=i)
@@ -169,7 +175,7 @@ def split_detector_sections(hits, phi_edges, eta_edges):
     return hits_sections
 
 def process_event(prefix, output_dir, pt_min, n_eta_sections, n_phi_sections,
-                  eta_range, phi_range, phi_slope_max, z0_max, phi_reflect):
+                  eta_range, phi_range, phi_slope_max, z0_max, phi_reflect, endcaps):
     # Load the data
     evtid = int(prefix[-9:])
     logging.info('Event %i, loading data' % evtid)
@@ -178,7 +184,8 @@ def process_event(prefix, output_dir, pt_min, n_eta_sections, n_phi_sections,
 
     # Apply hit selection
     logging.info('Event %i, selecting hits' % evtid)
-    hits = select_hits(hits, truth, particles, pt_min=pt_min).assign(evtid=evtid)
+    hits = select_hits(hits, truth, particles, pt_min=pt_min, 
+                       endcaps=endcaps).assign(evtid=evtid)
 
     # Divide detector into sections
     #phi_range = (-np.pi, np.pi)
