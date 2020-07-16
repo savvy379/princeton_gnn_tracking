@@ -19,7 +19,7 @@ pip install /path/to/repository
 ```
 to train the GNN. 
 
-In both commands, 'XX' should be replaced with the name of your chosen model. There are many example config files for running with different configurations (i.e. including endcaps, data augmentation, etc) but you can also create a custom config for your task. Be sure to change the `input directory` and `output directory`commands in the config files to match your individual system. 
+In both commands, 'XX' should be replaced with the name of your chosen model. There are many example config files for running with different configurations (i.e. including endcaps, data augmentation, etc) but you can also create a custom config for your task. Be sure to change the `input directory` and `output directory`commands in the config files to match your individual system. Note that the IN's plotting and training scripts use the same configuration file, **configs/IN/train_IN.yaml**. 
 
 **Note:** the prepare.py and train.py scripts must be run from the main directory. We include the core scripts for both models (Edge Classifier 1 and Interaction Network) there; additional prepare and train scripts can be found in the script folder. 
 
