@@ -21,7 +21,7 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser('train_IN.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/train_LP.yaml')
+    add_arg('config', nargs='?', default='configs/train_IN.yaml')
     return parser.parse_args()
 
 def get_graphs(d):

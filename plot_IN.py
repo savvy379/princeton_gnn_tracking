@@ -16,11 +16,13 @@ from models.IN.interaction_network import InteractionNetwork
 from models.IN.graph import Graph, save_graphs, load_graph
 import analyses.training_plots as plots
 
+# note that this script is configured by configs/train_IN.yaml
+# >>> python plot_IN.py configs/train_IN.yaml
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser('train_IN.py')
     add_arg = parser.add_argument
-    add_arg('config', nargs='?', default='configs/train_LP.yaml')
+    add_arg('config', nargs='?', default='configs/train_IN.yaml')
     return parser.parse_args()
     
 # grab config parameters
