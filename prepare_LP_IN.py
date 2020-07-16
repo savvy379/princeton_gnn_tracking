@@ -67,6 +67,7 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max):
     z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
     # Filter segments according to criteria
     good_seg_mask = (phi_slope.abs() < phi_slope_max) & (z0.abs() < z0_max)
+    #print("Surviving:", hit_pairs[['index_1', 'index_2']][good_seg_mask])
     return hit_pairs[['index_1', 'index_2']][good_seg_mask]
 
 def construct_graph(hits, layer_pairs,
@@ -88,6 +89,7 @@ def construct_graph(hits, layer_pairs,
             logging.info('skipping empty layer: %s' % e)
             continue
         # Construct the segments
+        #print("layer1, layer2 = ", hits1, hits2)
         segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
     # Combine segments from all layer pairs
     segments = pd.concat(segments)
@@ -128,7 +130,6 @@ def select_hits(hits, truth, particles, pt_min=0, endcaps=False):
                                 (9,2), (9,4), (9,6), (9,8),
                                 (9,10), (9,12), (9,14)])
     n_det_layers = len(vlids)
-    print("running on", vlids)
 
     # Select barrel layers and assign convenient layer number [0-9]
     vlid_groups = hits.groupby(['volume_id', 'layer_id'])
@@ -202,7 +203,20 @@ def process_event(prefix, output_dir, pt_min, n_eta_sections, n_phi_sections,
     n_det_layers = 4
     l = np.arange(n_det_layers)
     layer_pairs = np.stack([l[:-1], l[1:]], axis=1)
-    
+    if (endcaps):
+        n_det_layers = 18
+        EC_L = np.arange(4, 11)
+        EC_L_pairs = np.stack([EC_L[:-1], EC_L[1:]], axis=1)
+        layer_pairs = np.concatenate((layer_pairs, EC_L_pairs), axis=0)
+        EC_R = np.arange(11, 18)
+        EC_R_pairs = np.stack([EC_R[:-1], EC_R[1:]], axis=1)
+        layer_pairs = np.concatenate((layer_pairs, EC_R_pairs), axis=0)
+        barrel_EC_L_pairs = np.array([(0,10), (1,10), (2,10), (3,10)])
+        barrel_EC_R_pairs = np.array([(0,11), (1,11), (2,11), (3,11)])
+        layer_pairs = np.concatenate((layer_pairs, barrel_EC_L_pairs), axis=0)
+        layer_pairs = np.concatenate((layer_pairs, barrel_EC_R_pairs), axis=0)
+    print(layer_pairs)
+
     # Construct the graph
     logging.info('Event %i, constructing graphs' % evtid)
     graphs = [construct_graph(section_hits, layer_pairs=layer_pairs,
@@ -243,8 +257,8 @@ def main():
         logging.info('Configuration: %s' % config)
 
     # Construct layer pairs from adjacent layer numbers
-    layers = np.arange(10)
-    layer_pairs = np.stack([layers[:-1], layers[1:]], axis=1)
+    #layers = np.arange(10)
+    #layer_pairs = np.stack([layers[:-1], layers[1:]], axis=1)
 
     # Find the input files
     input_dir = config['input_dir']

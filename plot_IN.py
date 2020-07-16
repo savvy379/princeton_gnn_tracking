@@ -36,6 +36,7 @@ model_dir   = config['model_outdir']
 save_last   = config['save_last_n_epoch']
 tag         = config['tag']
 phi_reflect = config['phi_reflect']
+graph_indir   = config['graph_indir']
 train_size, test_size = 800, 200
 plot_dir = "/tigress/jdezoort/IN_output/plots"
 
@@ -51,7 +52,7 @@ models = ["{0}/{1}".format(model_dir, model)
           for model in models if job_name in model]
 
 # load in test graph paths
-graph_dir = "/tigress/jdezoort/IN_samples_large/IN_{0}_{1}/".format(prep, pt_cut)
+graph_dir = "{0}/IN_{1}_{2}/".format(graph_indir, prep, pt_cut)
 graph_files = []
 if (phi_reflect):
     phi_graph_dir = "/tigress/jdezoort/IN_samples_large/IN_{0}_{1}_phi_reflect/".format(prep, pt_cut)

@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
-
 import trackml
 from trackml.dataset import load_event
 from trackml.dataset import load_dataset
@@ -28,6 +27,27 @@ font = {'family' : 'sans-serif',
         'size'   : 12}
 plt.rc('font', **font)
 plt.rc('text', usetex=True)
+
+
+def plot_rz(X, Ri, Ro):
+    X = np.array(X)
+    X[:, 0] *= np.sign(X[:, 1])
+    feats_o = np.matmul(Ro.transpose(), X)
+    feats_i = np.matmul(Ri.transpose(), X)
+
+    for i in range(len(X)):        
+        plt.scatter(X[i][2], X[i][0], c='silver', linewidths=0, marker='s', s=8)
+
+    for i in range(len(feats_o)):
+        plt.plot((feats_o[i][2], feats_i[i][2]),
+                 (feats_o[i][0], feats_i[i][0]),
+                 'bo-', lw=0.1, ms=0.1, alpha=0.3)
+
+    plt.ylabel("R [m]")
+    plt.xlabel("z [m]")
+    #plt.savefig(filename, dpi=1200)
+    plt.show()
+    plt.clf()
 
 
 def plotSingleHist(data, x_label, y_label, bins, weights=None, title='', color='blue'):

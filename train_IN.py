@@ -116,6 +116,7 @@ if (verbose):
 
 test_losses, train_losses, batch_losses = [], [], []
 for epoch in range(n_epoch):
+    #print("Epoch #{0}".format(epoch))
     start_time = time.time()
     epoch_loss = 0.0
     batch_losses = []
