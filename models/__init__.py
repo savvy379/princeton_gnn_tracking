@@ -2,6 +2,9 @@
 PyTorch dataset specifications.
 """
 
+import yaml
+import os
+
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.dataloader import default_collate
@@ -39,28 +42,6 @@ def get_data_loaders(name, batch_size, distributed=False,
                          if valid_dataset is not None else None)
     return train_data_loader, valid_data_loader
 
-"""                                                                                
-Python module for holding our PyTorch trainers.                                    
-                                                                                   
-Trainers here inherit from the BaseTrainer and implement the logic for             
-constructing the model as well as training and evaluation.                         
-"""
-
-def get_trainer(name, **trainer_args):
-    """                                                                            
-    Factory function for retrieving a trainer.                                     
-    """
-    if name == 'hello':
-        from .hello import HelloTrainer
-        return HelloTrainer(**trainer_args)
-    elif name == 'basic':
-        from .basic import BasicTrainer
-        return BasicTrainer(**trainer_args)
-    elif name == 'gnn':
-        from .trainers.gnn import GNNTrainer
-        return GNNTrainer(**trainer_args)
-    else:
-        raise Exception('Trainer %s unknown' % name)
 
 
 """                                                                                
@@ -79,3 +60,10 @@ def get_model(name, **model_args):
         return GNNSegmentClassifier(**model_args)
     else:
         raise Exception('Model %s unknown' % name)
+""""
+Module for reading in the config files
+"""""
+def load_config(file_name):
+    assert(os.path.exists(file_name))
+    with open(file_name) as f:
+        return yaml.load(f, Loader=yaml.FullLoader)

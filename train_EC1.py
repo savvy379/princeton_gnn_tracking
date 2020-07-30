@@ -1,5 +1,5 @@
 """
-Main training script for NERSC PyTorch examples
+Main training script for EC1
 """
 
 # System
@@ -7,17 +7,18 @@ import os
 import sys
 import argparse
 import logging
+import pickle
 
 # Externals
-import yaml
 import numpy as np
-import torch.distributed as dist
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 # Locals
 from models import get_data_loaders
-from models import get_trainer
+from models import load_config
+from models.trainers import get_trainer
 
 def parse_args():
     """Parse command line arguments."""
@@ -52,9 +53,6 @@ def init_workers(distributed=False):
         n_ranks = dist.get_world_size()
     return rank, n_ranks
 
-def load_config(config_file):
-    with open(config_file) as f:
-        return yaml.load(f)
 
 def main():
     """Main function"""
@@ -66,7 +64,8 @@ def main():
 
     # Load configuration
     config = load_config(args.config)
-    output_dir = os.path.expandvars(config.get('output_dir', None))
+    print(config)
+    output_dir = os.path.expandvars(config['segment_training']['output_dir'])
     if rank == 0:
         os.makedirs(output_dir, exist_ok=True)
     else:
