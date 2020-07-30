@@ -1,9 +1,12 @@
 model: IN 
 strategy: LP
-graph_dir: /tigress/jdezoort/IN_samples_large 
+graph_dir: /tigress/jdezoort/IN_samples_endcaps 
 n_events: 1000
-truth_file: truth/truth_LP.txt
+truth_file: truth/truth_segs-parts_LP_EC.pkl
 pt_cuts:
   - '0p5'
+  - '0p6'
+  - '0p75'
   - '1'
+  - '1p5'
   - '2'

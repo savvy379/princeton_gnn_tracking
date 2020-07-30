@@ -77,22 +77,23 @@ def plotDoubleHistOverlapped(data1, data2, xlabel, ylabel, nBins, minBin, maxBin
         plt.savefig(figLabel, dpi=1200)
     plt.show()
 
-def plotQuant(x, y, up, down, xlabel, ylabel, color='mediumseagreen'):
+def plotQuant(x, y, up, down, xlabel, ylabel, title='', 
+              color='mediumseagreen', save_fig=False):
     print(x, y, up, down)
     plt.errorbar(x, y, yerr=np.array([y-down, up-y]), color=color, capsize=1, ls='', lw=1, marker='.')
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.savefig('test_out.png', dpi=1200)
+    if (save_fig): plt.savefig(title+'.png', dpi=1200)
     plt.show()
 
-def plotXY(x, y, x_label, y_label, yerr = [], title='', color='blue', save=False):
+def plotXY(x, y, x_label, y_label, yerr = [], title='', color='blue', save_fig=False):
     """ generic function for scatter plotting
     """
     if (len(yerr) == 0): plt.scatter(x, y, c=color)
     else: plt.errorbar(x, y, yerr=yerr, c=color, capsize=1, ls='', lw=1, marker='.')
     plt.xlabel(x_label)
     plt.ylabel(y_label)
-    if (save): plt.savefig(title+'.png', dpi=1200)
+    if (save_fig): plt.savefig(title+'.png', dpi=1200)
     plt.show()
 
 def plotXYXY(x1, y1, label_1, x2, y2, label_2, x_label, y_label, yerr1 = [], yerr2 = [],

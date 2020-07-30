@@ -13,6 +13,7 @@ from functools import partial
 
 # Externals
 import yaml
+import pickle
 import numpy as np
 import pandas as pd
 import trackml.dataset
@@ -45,7 +46,9 @@ def calc_eta(r, z):
     theta = np.arctan2(r, z)
     return -1. * np.log(np.tan(theta / 2.))
 
-def select_segments(hits1, hits2, phi_slope_max, z0_max):
+def select_segments(hits1, hits2, phi_slope_max, z0_max,
+                    layer1, layer2, 
+                    remove_intersecting_edges=False):
     """
     Construct a list of selected segments from the pairings
     between hits1 and hits2, filtered with the specified
@@ -65,14 +68,27 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max):
     dr = hit_pairs.r_2 - hit_pairs.r_1
     phi_slope = dphi / dr
     z0 = hit_pairs.z_1 - hit_pairs.r_1 * dz / dr
+    
+    # Apply the intersecting line cut
+    intersected_layer = dr.abs() < -1 
+    if remove_intersecting_edges:
+        
+        # Innermost barrel layer --> innermost L,R endcap layers
+        if (layer1 == 0) and (layer2 == 4 or layer2 == 10):
+            z_coord = 71.56298065185547 * dz/dr + z0
+            intersected_layer = (z_coord > -490.975) & (z_coord < 490.975)
+        if (layer1 == 1) and (layer2 == 4 or layer2 == 10):
+            z_coord = 115.37811279296875 * dz / dr + z0
+            intersected_layer = (z_coord > -490.975) & (z_coord < 490.975)
+        
     # Filter segments according to criteria
-    good_seg_mask = (phi_slope.abs() < phi_slope_max) & (z0.abs() < z0_max)
+    good_seg_mask = (phi_slope.abs() < phi_slope_max) & (z0.abs() < z0_max) & (intersected_layer == False)
     #print("Surviving:", hit_pairs[['index_1', 'index_2']][good_seg_mask])
     return hit_pairs[['index_1', 'index_2']][good_seg_mask]
 
-def construct_graph(hits, layer_pairs,
-                    phi_slope_max, z0_max,
-                    feature_names, feature_scale):
+def construct_graph(hits, layer_pairs, phi_slope_max, z0_max,
+                    feature_names, feature_scale, evtid="-1",
+                    remove_intersecting_edges = False):
     """Construct one graph (e.g. from one event)"""
 
     # Loop over layer pairs and construct segments
@@ -90,7 +106,8 @@ def construct_graph(hits, layer_pairs,
             continue
         # Construct the segments
         #print("layer1, layer2 = ", hits1, hits2)
-        segments.append(select_segments(hits1, hits2, phi_slope_max, z0_max))
+        segments.append(select_segments(hits1, hits2, layer1, layer2,
+                                        phi_slope_max, z0_max))
     # Combine segments from all layer pairs
     segments = pd.concat(segments)
 
@@ -103,6 +120,10 @@ def construct_graph(hits, layer_pairs,
     y = np.zeros(n_edges, dtype=np.float32)
     a = np.zeros(n_edges, dtype=np.float32)
     
+    # MODIFY
+    with open("pid_truth_vectors/"+str(evtid)+"_truth.pkl", 'wb') as truth_file:
+        pickle.dump(hits.particle_id.values, truth_file)
+
     # We have the segments' hits given by dataframe label,
     # so we need to translate into positional indices.
     # Use a series to map hit label-index onto positional-index.
@@ -176,7 +197,8 @@ def split_detector_sections(hits, phi_edges, eta_edges):
     return hits_sections
 
 def process_event(prefix, output_dir, pt_min, n_eta_sections, n_phi_sections,
-                  eta_range, phi_range, phi_slope_max, z0_max, phi_reflect, endcaps):
+                  eta_range, phi_range, phi_slope_max, z0_max, phi_reflect,
+                  endcaps, remove_intersecting_edges):
     # Load the data
     evtid = int(prefix[-9:])
     logging.info('Event %i, loading data' % evtid)
@@ -215,14 +237,15 @@ def process_event(prefix, output_dir, pt_min, n_eta_sections, n_phi_sections,
         barrel_EC_R_pairs = np.array([(0,11), (1,11), (2,11), (3,11)])
         layer_pairs = np.concatenate((layer_pairs, barrel_EC_L_pairs), axis=0)
         layer_pairs = np.concatenate((layer_pairs, barrel_EC_R_pairs), axis=0)
-    print(layer_pairs)
 
     # Construct the graph
     logging.info('Event %i, constructing graphs' % evtid)
     graphs = [construct_graph(section_hits, layer_pairs=layer_pairs,
                               phi_slope_max=phi_slope_max, z0_max=z0_max,
                               feature_names=feature_names,
-                              feature_scale=feature_scale)
+                              feature_scale=feature_scale,
+                              evtid=evtid, 
+                              remove_intersecting_edges=remove_intersecting_edges)
               for section_hits in hits_sections]
     
     # Write these graphs to the output directory

@@ -1,4 +1,5 @@
 import queue 
+import time 
 
 import numpy as np
 import matplotlib
@@ -7,7 +8,7 @@ from matplotlib.pyplot import cm
 
 import analyses.prepare_plots as plots
 
-def DBScan(dist_matrix, eps=0.25, min_pts=1):
+def DBScan(dist_matrix, eps=0.2, min_pts=1):
     NOISE, CORE, BORDER, CLUSTER = 0, -1, -2, 1
     point_labels = np.zeros(dist_matrix.shape[0])
     core_points     = []
@@ -15,6 +16,7 @@ def DBScan(dist_matrix, eps=0.25, min_pts=1):
     neighbor_pts    = []
     neighbor_dists  = []
     
+    t0 = time.time()
     n_hits = dist_matrix.shape[0]
     for h in range(n_hits):
         o, i = dist_matrix[h, :], dist_matrix[:, h]
@@ -56,23 +58,22 @@ def DBScan(dist_matrix, eps=0.25, min_pts=1):
                         point_labels[k] = CLUSTER
             CLUSTER += 1
 
-    return point_labels
+    return point_labels, time.time() - t0
 
 
 def plot_N_clusters(N, X, feats_i, feats_o, hit_clusters, filename):
     
     X = np.array(X)
     X[:, 1] *= np.sign(X[:, 2])
-    colors = cm.gist_ncar(np.linspace(0, 1, N))
+    colors = cm.tab20(np.linspace(0, 1, N))
     for i in range(len(X)):
-        if (hit_clusters[i] < N):
+        if (hit_clusters[i] == 0):
+            plt.scatter(X[i][3], X[i][1], c=colors[0], alpha=0.2,
+                        linewidths=0, marker = 's', s=8)
+        elif (hit_clusters[i] < N):
+            
             plt.scatter(X[i][3], X[i][1], c=colors[int(hit_clusters[i])],
-                        linewidths=0, marker='s', s=8)
-
-    for i in range(len(feats_o)):
-        plt.plot((feats_o[i][2], feats_i[i][2]),
-                 (feats_o[i][0], feats_i[i][0]),
-                 'bo-', lw=0.1, ms=0.1, alpha=0.3)
+                        linewidths=0, marker='s', s=30)
 
     plt.ylabel("R [m]")
     plt.xlabel("z [m]")

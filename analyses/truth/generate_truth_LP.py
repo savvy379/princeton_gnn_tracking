@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+import pickle
 from os import listdir
 from os.path import isfile, join
 sys.path.append("..")
@@ -28,16 +29,18 @@ files = [f.split('.')[0] for f in files if "hits" in f]
 evt_ids = [f.split('-')[0] for f in files]
 
 endcaps = True
-outfile = open("truth_LP_EC.txt", "w")
+outfile = open("truth_segs-parts_LP_EC.pkl", "wb")
+pt_cuts = [0.5, 0.6, 0.75, 1, 1.5, 2]
+truth_data = {'pt_cuts' : pt_cuts}
 
 for evt_id in evt_ids:
     
+    if (int(evt_id.split('00000')[1]) > 2000): continue
+    
     n_segs_per_graph = []
-    pt_cuts = [0.5, 0.6, 0.75, 1, 1.5, 2]
+    n_parts_per_graph = []
     
     for i in range(len(pt_cuts)):
-
-        if (verbose): print(str(evt_id), str(pt_cuts[i]))
         
         pixel_layers = [(8,2), (8,4), (8,6), (8,8)]
         if (endcaps):
@@ -66,26 +69,39 @@ for evt_id in evt_ids:
         hits = hits.loc[
             hits.groupby(['particle_id', 'layer'], as_index=False).r.idxmin()
         ]
-        
+
         particle_ids = hits.particle_id.unique()
+        n_parts_per_graph.append(int(particle_ids.shape[0]))
+        
         segs_per_particle = [(hits[hits.particle_id == i].shape[0]-1) 
                              for i in particle_ids]
         n_segs = np.sum(segs_per_particle)
         n_segs_per_graph.append(n_segs)
         
-    outfile.write("{0} {1} {2} {3} {4} {5} {6}\n"
+    evt_truth_data = [n_segs_per_graph, n_parts_per_graph]
+    truth_data[str(evt_id)] = evt_truth_data
+    if (verbose):
+        print(str(evt_id), truth_data[str(evt_id)])
+    
+    """outfile.write("{0} {1} {2} {3} {4} {5} {6}\n"
                   .format(str(evt_id), str(n_segs_per_graph[0]), 
                           str(n_segs_per_graph[1]), str(n_segs_per_graph[2]), 
                           str(n_segs_per_graph[3]), str(n_segs_per_graph[4]), 
                           str(n_segs_per_graph[5])))
-    
+   
     if (verbose):
         print("{0} {1} {2} {3} {4} {5} {6}\n"
               .format(str(evt_id), str(n_segs_per_graph[0]),
                       str(n_segs_per_graph[1]), str(n_segs_per_graph[2]),
                       str(n_segs_per_graph[3]), str(n_segs_per_graph[4]),
                       str(n_segs_per_graph[5])))
+    """
 
-        
+pickle.dump(truth_data, outfile)
 outfile.close()
+
+with open('truth_segs-parts_LP_EC.pkl', 'rb') as fp:
+    itemlist = pickle.load(fp)
+    print(itemlist)
+    print(itemlist == truth_data)
     

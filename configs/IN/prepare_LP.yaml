@@ -1,11 +1,11 @@
 # Input/output configuration
 input_dir: /tigress/jdezoort/train_1
-output_dir: /tigress/jdezoort/IN_samples_endcaps/IN_LP_1
+output_dir: /tigress/jdezoort/IN_samples_endcaps/IN_LP_2
 n_files: 1000
 
 # Graph building configuration
 selection:
-    pt_min: 1 # GeV
+    pt_min: 2 # GeV
     phi_slope_max: 0.000262 # 0.0006
     z0_max: 15000 # 100
     n_phi_sections: 1
@@ -13,3 +13,4 @@ selection:
     eta_range: [-5, 5]
     endcaps: true
     phi_reflect: false
+    remove_intersecting_edges: true

@@ -3,6 +3,7 @@
 import os
 import sys
 import yaml
+import pickle
 import argparse
 sys.path.append("../")
 
@@ -15,9 +16,9 @@ from scipy.stats import poisson
 
 import prepare_plots as plots
 
-parser = argparse.ArgumentParser('prepare_efficiencies.py')
+parser = argparse.ArgumentParser('prepare_measurements.py')
 add_arg = parser.add_argument
-add_arg('config', nargs='?', default='prepare_efficiencies_IN.yaml')
+add_arg('config', nargs='?', default='prepare_measurements.yaml')
 args = parser.parse_args()
 with open(args.config) as f:
     config = yaml.load(f, yaml.FullLoader)
@@ -35,6 +36,9 @@ pt_cuts    = config['pt_cuts']
 graph_dir  = config['graph_dir']
 truth_file = config['truth_file']
 
+print("analyzing\n  - {0}\n  - {1}_{2}\n  - {3}"
+      .format(pt_cuts, model, strategy, truth_file))
+
 # configure matplotlib
 font = {'family' : 'sans-serif',
         'weight' : 'bold',
@@ -42,102 +46,103 @@ font = {'family' : 'sans-serif',
 rc('font', **font)
 rc('text', usetex=True)
 
-def get_graphs(d):
-    """ get all graphs from a directory
-          return [("event<id1>", graph1, size), ...]
-    """
-    files = os.listdir(d)
-    return [(f.split('_')[0], load_graph(d+f), os.path.getsize(d+f)/10**6) 
-            for f in files]
-
 def get_shape(g):
     """ graph shape = (n_nodes, n_edges)
     """
-    n_nodes = [g[i][1].X.shape[0] for i in range(n_events)]
-    n_edges = [g[i][1].Ri.shape[1] for i in range(n_events)]
-    return np.array([n_nodes, n_edges])
+    n_nodes = g[1].X.shape[0]
+    n_edges = g[1].Ri.shape[1]
+    return n_nodes, n_edges
 
 def get_segment_efficiency(g):
     """ segment efficiency = sum(y)/len(y)
     """
-    return [np.sum(g[i][1].y)/(g[i][1].y).shape[0]
-            for i in range(n_events)]
+    print(" ...sum(y)={0}, len(y)={1}"
+          .format(np.sum(g[1].y), g[1].y.shape[0]))
+    return np.sum(g[1].y)/(g[1].y).shape[0]
 
-def get_truth_efficiency(i, gr, tr):
+def get_truth_efficiency(i, g, tr):
     """ truth efficiency = sum(y)/n_total_true
     """
-    print("Truth:", tr.loc[tr['evt_id']==gr[0][0], pt_cuts[i]])
-    truth_effs = [np.sum(g[1].y)/float(tr.loc[tr['evt_id']==g[0], pt_cuts[i]]) 
-                  for g in gr]
-    print(np.quantile(truth_effs, 0.5, axis=0))
-    return truth_effs
-
-def print_summary(eff, nodes, edges, tag=""):
-    print(tag)
-    print("  ==> Average n_nodes = ", np.round(nodes[0], decimals=2),
-          "+/-", np.round(nodes[1], decimals=2))
-    print("  ==> Average n_edges = ", np.round(edges[0], decimals=2),
-          "+/-", np.round(edges[1], decimals=2))
-    print("  ==> Segment Efficiency", np.round(eff[0], decimals=3),
-          "+/-", np.round(eff[1], decimals=3))    
+    evt_id = g[0]
+    n_segs = tr[evt_id][0]
+    pt_cuts = tr['pt_cuts'][i]
+    truth_eff = np.sum(g[1].y)/n_segs[i]
+    print(" ...sum(y)={0}, n_truth={1}"
+          .format(np.sum(g[1].y), n_segs[i]))
+    #print(np.quantile(truth_effs, 0.5, axis=0))
+    return truth_eff
 
 def read_truth(file_name):
-    """ truth file contains the true number of segments per
-        pt cut for each file
-    """
-    truth_file = open(file_name, 'r')
-    lines = [i.split(" ") for i in truth_file]
-    truth_info = df({'evt_id' : [], '0p5' : [], '0p6' :[],
-                     '0p75' : [], '1' : [], '1p5' : [], 
-                     '2' : [], '2p5' : [], '3' : [], 
-                     '4' : [], '5' : []})
-    for line in lines:
-        truth_info = truth_info.append({'evt_id' : line[0],
-                                        '0p5'    : int(line[1]),
-                                        '0p6'    : int(line[2]),
-                                        '0p75'   : int(line[3]),
-                                        '1'      : int(line[4]),
-                                        '1p5'    : int(line[5]),
-                                        '2'      : int(line[6]),
-                                        '2p5'    : int(line[7]),
-                                        '3'      : int(line[8]),
-                                        '4'      : int(line[9]),
-                                        '5'      : int(line[10])},
-                                       ignore_index=True)
-        
-    return truth_info
+    with open(file_name, 'rb') as f:
+        truth_table = pickle.load(f)
+    return truth_table
 
-truth_info = read_truth(truth_file)
+
+truth_table = read_truth(truth_file)
 data_dirs  = ["{0}/{1}_{2}_{3}/".format(graph_dir, model, strategy, pt)
               for pt in pt_cuts]
 
 to_hist = df({'seg_eff'   : [], 'seg_eff_er'   : [],
               'truth_eff' : [], 'truth_eff_er' : [],
+              'part_eff'  : [], 'part_eff_er'  : [],
               'n_segs'    : [], 'n_segs_er'    : [],
               'n_nodes'   : [], 'n_nodes_er'   : [],
-              'size'      : [],  'size_er'     : []})
+              'size'      : [], 'size_er'      : []})
 
 for i in range(len(pt_cuts)):
-    data_graphs = get_graphs(data_dirs[i])
-    data_shapes = get_shape(data_graphs)
+    print(" pt: {0}".format(pt_cuts[i]))
     
-    truth_effs = get_truth_efficiency(i, data_graphs, truth_info)
-    seg_effs   = get_segment_efficiency(data_graphs)
+    graph_files = os.listdir(data_dirs[i])
+    seg_effs, truth_effs = [], []
+    node_counts, edge_counts = [], []
+    sizes = []
+
+    for graph_file in graph_files:
+        graph_path = data_dirs[i] + graph_file
+        graph_data = (graph_file.split('_')[0],
+                      load_graph(graph_path),
+                      os.path.getsize(graph_path)/10**6)
+        sizes.append(graph_data[2])
+        print("... analyzing {0}".format(graph_data[0]))
+        print("... truth: {0}".format(truth_table[graph_data[0]]))
+
+        n_nodes, n_edges = get_shape(graph_data)
+        node_counts.append(n_nodes)
+        edge_counts.append(n_edges)
+        
+        truth_eff = get_truth_efficiency(i, graph_data, truth_table)
+        seg_eff = get_segment_efficiency(graph_data)
+        print("... truth_eff: {0}".format(truth_eff))
+        print("... seg_eff: {0}".format(seg_eff))
+  
+        truth_effs.append(truth_eff)
+        seg_effs.append(seg_eff)
         
     avg_seg_eff   = [np.mean(seg_effs),
-                     np.quantile(seg_effs, 0.05, axis=0),
-                     np.quantile(seg_effs, 0.95, axis=0)]
+                     np.quantile(seg_effs, 0.25, axis=0),
+                     np.quantile(seg_effs, 0.75, axis=0)]
     avg_truth_eff = [np.mean(truth_effs),
-                     np.quantile(truth_effs, 0.05, axis=0), 
-                     np.quantile(truth_effs, 0.95, axis=0)]
+                     np.quantile(truth_effs, 0.25, axis=0), 
+                     np.quantile(truth_effs, 0.75, axis=0)]
     
-    avg_nodes     = [np.mean(data_shapes[0]), np.sqrt(np.var(data_shapes[0]))]
-    avg_edges     = [np.mean(data_shapes[1]), np.sqrt(np.var(data_shapes[1]))]
-    avg_size      = [np.mean([g[2] for g in data_graphs]),
-                     np.sqrt(np.var([g[2] for g in data_graphs]))]
+    avg_nodes     = [np.mean(node_counts), np.sqrt(np.var(node_counts))]
+    avg_edges     = [np.mean(edge_counts), np.sqrt(np.var(edge_counts))]
+    avg_size      = [np.mean(sizes), np.sqrt(np.var(sizes))]
 
     data_tag = " ***** pt=" + pt_cuts[i] + " data ***** "
-    print_summary(avg_seg_eff, avg_nodes, avg_edges, tag=data_tag)
+    print("{0}\n \t seg_eff: {1} +/- {2} \n \t truth_eff: {3} +/- {4}"
+          .format(data_tag, np.round(avg_seg_eff[0], decimals=3),
+                  np.round(avg_seg_eff[1], decimals=3),
+                  np.round(avg_truth_eff[0], decimals=3),
+                  np.round(avg_truth_eff[1], decimals=3)))
+    print("\t nodes: {0} +/- {1} \n \t edges: {2} +/- {3}"
+          .format(np.round(avg_nodes[0], decimals=3),
+                  np.round(avg_nodes[1], decimals=3),
+                  np.round(avg_edges[0], decimals=3),
+                  np.round(avg_edges[1], decimals=3)))
+    print("\t size: {0} +/- {1}"
+          .format(np.round(avg_size[0], decimals=3),
+                  np.round(avg_size[1], decimals=3)))
     
     to_hist = to_hist.append({'seg_eff'      : avg_seg_eff[0],
                               'seg_eff_up'   : avg_seg_eff[1],
@@ -160,12 +165,29 @@ pt_cuts = np.array(pt_map[pt_cut] for pt_cut in pt_cuts)
 plots.plotQuant(pt_cuts, np.array(to_hist['truth_eff']), 
                 np.array(to_hist['truth_eff_up']), 
                 np.array(to_hist['truth_eff_dn']),
-                '$p_{T}$ Cut [GeV]', 'Truth Efficiency')
+                '$p_{T}$ Cut [GeV]', 'Truth Efficiency',
+                title=graph_dir+'/plots/truth_eff.png', 
+                save_fig=True)
 
 plots.plotQuant(pt_cuts, np.array(to_hist['seg_eff']),
                 np.array(to_hist['seg_eff_up']),
                 np.array(to_hist['seg_eff_dn']),
-                '$p_{T}$ Cut [GeV]', 'Segment Efficiency')
+                '$p_{T}$ Cut [GeV]', 'Segment Efficiency',
+                title=graph_dir+'/plots/seg_eff.png',
+                save_fig=True)
+
+plotXY(pt_cuts, np.array(to_hist['size']), '$p_{T}$ Cut [GeV]',
+       'Size [MB]', yerr=np.array(to_hist['size_er']), color='indigo',
+       title=graph_dir+'/plots/size.png', save_Fig=True)
+
+plotXY(pt_cuts, np.array(to_hist['n_segs']), '$p_{T}$ Cut [GeV]',
+       'Segments per Graph', yerr=np.array(to_hist['n_segs_er']), color='seagreen',
+       title=graph_dir+'/plots/n_segments.png', save_fig=True)
+
+plotXY(pt_cuts, np.array(to_hist['n_nodes']), '$p_{T}$ Cut [GeV]',
+       'Nodes per Graph', yerr=np.array(to_hist['n_nodes_er']), color='seagreen',
+       title=graph_dir+'/plots/n_nodes.png', save_fig=True)
+
 
 
 """

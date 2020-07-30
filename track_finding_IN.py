@@ -70,14 +70,19 @@ test_y  = [Variable(torch.FloatTensor(test_graphs[i][1].y)).unsqueeze(0).t()
 model_dir = "/tigress/jdezoort/IN_output/trained_models/"
 model = model_dir + "LP_2_350_thin_LR03_recur1_endcaps_epoch345.pt"
 
+criterion = torch.nn.BCELoss()
 interaction_network = InteractionNetwork(3, 1, 1)
 interaction_network.load_state_dict(torch.load(model))
 interaction_network.eval()    
 predicted = interaction_network(test_O, test_Rs, test_Rr, test_Ra)
+losses = [criterion(predicted[i], test_y[i]).item()
+          for i in range(test_size)] 
 
 # to hist
-eps_range = np.arange(0.15, 0.35, 0.01)
+eps_range = [0.20]
 bad_fractions = {eps:[] for eps in eps_range}
+IDd_fractions = {eps:[] for eps in eps_range}
+times = []
 
 # run DBScan on each test graph
 for g in range(test_size):
@@ -127,30 +132,62 @@ for g in range(test_size):
     for h in range(len(pred_i)):
         dist_matrix[int(pred_o[h][0])][int(pred_i[h][0])] = distances[h]
 
-    # DBScan 
-    for eps in eps_range:
-        hit_clusters = tf_tools.DBScan(dist_matrix, eps=eps, min_pts=1)
-        n_clusters = int(np.max(hit_clusters))
+    # DBScan
+    eps, min_pts = 0.2, 1
+    hit_clusters, time = tf_tools.DBScan(dist_matrix, eps=eps, min_pts=min_pts)
+    times.append(time)
+    n_clusters = int(np.max(hit_clusters))
         
-        # validate
-        hit_particle_ids = particle_ids[g]
-        false_counts = 0
-        for i in range(n_clusters):
-            clustered_hits_idx = np.where(hit_clusters==i)[0]
-            clustered_hits = X[clustered_hits_idx]
-            clustered_particles = hit_particle_ids[clustered_hits_idx]
-            if (np.unique(clustered_particles).shape[0] > 1):
-                if (i != 0): false_counts += 1
-            
-        bad_fraction = false_counts/float(n_clusters)
-        #print("Bad fraction: {0}".format(bad_fraction))
-        bad_fractions[eps].append(bad_fraction)
+    # validate
+    hit_particle_ids = particle_ids[g]
+    false_counts, true_counts = 0, 0
+    for i in range(n_clusters):
+        clustered_hits_idx = np.where(hit_clusters==i)[0]
+        clustered_hits = X[clustered_hits_idx]
+        clustered_particles = hit_particle_ids[clustered_hits_idx]
+        if (np.unique(clustered_particles).shape[0] > 1):
+            if (i != 0): false_counts += 1
+        elif (np.unique(clustered_particles).shape[0] == 1):
+            if (i != 0): 
+                true_counts += 1
+    
+    n_tracks = np.unique(hit_particle_ids).shape[0]
+    print("ID'd {0}/{1} tracks".format(true_counts, n_tracks))
+    IDd_fraction = true_counts/float(n_tracks)
+    IDd_fractions[eps].append(IDd_fraction)
+    
+    bad_fraction = false_counts/float(n_clusters)
+    print("Bad fraction: {0}".format(bad_fraction))
+    bad_fractions[eps].append(bad_fraction)
 
+    #plot_N = 20
+    #filename = "{0}/DBScan_{1}_{2}".format(plot_dir, plot_N, test_graphs[g][0])
+    #tf_tools.plot_N_clusters(plot_N, X, feats_i, feats_o, hit_clusters, filename)
+
+plots.plotSingleHist(times, "Time [s]", "Counts", 16, color="mediumslateblue")
 
 for eps, frac_list in bad_fractions.items():
+    plots.plotSingleHist(frac_list, "Bad Fraction", "Counts", 16, 
+                         weights=None, title="$\epsilon=0.2$, minpts$=1$", 
+                         color='red')
+    plots.plotXY(losses, frac_list, "Loss", "Bad Fraction")
     print("eps: {0} -> {1} +/- {2}"
           .format(eps, np.mean(frac_list), np.sqrt(np.var(frac_list))))
-    
+
+for eps, frac_list in IDd_fractions.items():
+    plots.plotSingleHist(frac_list, "ID'd Fraction", "Counts", 16,
+                         weights=None, title="$\epsilon=0.2$, minpts$=1$", 
+                         color="mediumseagreen")
+    plots.plotXY(losses, frac_list, "Loss", "ID'd Fraction")
+    print("eps: {0} -> {1} +/- {2}"
+          .format(eps, np.mean(frac_list), np.sqrt(np.var(frac_list))))
+
+
+#def plotXY(x, y, x_label, y_label, yerr = [], title='', color='blue', save=False):
+
+#def plotXYXY(x1, y1, label_1, x2, y2, label_2, x_label, y_label, yerr1 = [], yerr2 = [],
+#             title='', color1='blue', color2 = 'seagreen', save=False):
+
     # plot_N = 7
     # filename = "{0}/DBScan_{1}_{2}".format(plot_dir, plot_N, test_graphs[g][0]) 
     # tf_tools.plot_N_clusters(7, X, feats_i, feats_o, hit_clusters, filename)
