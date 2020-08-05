@@ -28,6 +28,7 @@ class InteractionNetwork(nn.Module):
         reembeded_objects = objects
 
         for i in range(self.n_recur):
+        
             # marshalling step: build interaction terms
             senders   = [torch.matmul(reembeded_objects[i].t(), sender_relations[i]) 
                          for i in range(batch_size)]
@@ -42,6 +43,7 @@ class InteractionNetwork(nn.Module):
             # aggregation step: aggregate effects
             effects_receivers = [torch.matmul(receiver_relations[i], effects[i]).t() 
                                  for i in range(batch_size)]
+            #effects_receivers = [torch.matmul(receivers[i], effects[i]).t()
             aggregated = [torch.cat([reembeded_objects[i].t(), effects_receivers[i]]) 
                           for i in range(batch_size)]
         
@@ -55,6 +57,8 @@ class InteractionNetwork(nn.Module):
                      for i in range(batch_size)]
         interaction_terms = [torch.cat([senders[i], receivers[i], relation_info[i]])
                              for i in range(batch_size)]
-        edge_weights = self.relational_model(interaction_terms)
+        
+        effects = self.relational_model(interaction_terms)
+        edge_weights = [torch.sigmoid(effect) for effect in effects]
 
         return edge_weights

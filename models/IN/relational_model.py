@@ -17,13 +17,12 @@ class RelationalModel(nn.Module):
         self.output_size = output_size
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, output_size),
-            nn.Sigmoid()
+            nn.ELU(),
+            nn.Linear(hidden_size, output_size)
         )
 
     def forward(self, interaction_terms):
@@ -31,5 +30,5 @@ class RelationalModel(nn.Module):
         interaction_terms = [interaction_terms[i].t() 
                              for i in range(N)]
         effects = [self.layers(interaction_terms[i]) 
-             for i in range(N)]
+                   for i in range(N)]
         return effects
