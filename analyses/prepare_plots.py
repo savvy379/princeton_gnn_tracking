@@ -15,6 +15,7 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from mpl_toolkits.mplot3d import Axes3D
 
 import trackml
 from trackml.dataset import load_event
@@ -28,10 +29,39 @@ font = {'family' : 'sans-serif',
 plt.rc('font', **font)
 plt.rc('text', usetex=True)
 
-
-def plot_rz(X, Ri, Ro):
+def plot_phieta(X, Ri, Ro, save_fig=False, filename="phieta.png"):
     X = np.array(X)
-    X[:, 0] *= np.sign(X[:, 1])
+    phi = X[:, 1]
+    mags = X[:,0]*X[:,0] + X[:,2]*X[:,2]
+    z = X[:,2]
+    eta = 0.5*np.log((mags+np.abs(z))/(mags-np.abs(z)))
+
+    for i in range(len(X)):
+        print(z[i], mags[i], eta[i])
+
+    X = np.array([phi, eta, np.zeros(X.shape[0])])
+    feats_o = np.matmul(Ro.transpose(), X.transpose())
+    feats_i = np.matmul(Ri.transpose(), X.transpose())
+    print(feats_o)
+    print(feats_i)
+    
+    for i in range(len(X)):
+        plt.scatter(phi[i], eta[i], c='silver', linewidths=0,
+                    marker='s', s=8)
+    for i in range(len(feats_o)):
+        plt.plot((feats_o[i][1], feats_i[i][1]),
+                 (feats_o[i][0], feats_i[i][0]),
+                 'bo-', lw=0.1, ms=0.1, alpha=0.3)
+        
+    plt.ylabel("R [m]")
+    plt.xlabel("z [m]")
+    if (save_fig): plt.savefig(filename, dpi=1200)
+    plt.show()
+    plt.clf()
+
+def plot_rz(X, Ri, Ro, save_fig=False, filename="rz.png"):
+    X = np.array(X)
+    #X[:, 0] *= np.sign(X[:, 1])
     feats_o = np.matmul(Ro.transpose(), X)
     feats_i = np.matmul(Ri.transpose(), X)
 
@@ -45,10 +75,49 @@ def plot_rz(X, Ri, Ro):
 
     plt.ylabel("R [m]")
     plt.xlabel("z [m]")
-    #plt.savefig(filename, dpi=1200)
+    if (save_fig): plt.savefig(filename, dpi=1200)
     plt.show()
     plt.clf()
 
+
+def plot_phiz(X, Ri, Ro, save_fig = False, filename="phiz.png"):
+    X = np.array(X)
+    X[:, 0] *= np.sign(X[:, 1])
+    feats_o = np.matmul(Ro.transpose(), X)
+    feats_i = np.matmul(Ri.transpose(), X)
+    
+    for i in range(len(X)):
+        plt.scatter(X[i][2], X[i][1], c='silver', linewidths=0, marker='s', s=8)
+        
+    for i in range(len(feats_o)):
+        plt.plot((feats_o[i][2], feats_i[i][2]),
+                 (feats_o[i][1], feats_i[i][1]),
+                 'bo-', lw=0.1, ms=0.1, alpha=0.3)
+    
+    plt.ylabel("phi")
+    plt.xlabel("z [m]")
+    if (save_fig): plt.savefig(filename, dpi=1200)
+    plt.show()
+    plt.clf()
+                 
+
+def plot_phiz_by_layers(X_array):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    colors = ['lightsteelblue', 'cornflowerblue', 'mediumslateblue',
+              'darkslateblue', 'indigo']
+    for i, X in enumerate(np.array(X_array)[:, 0]):
+        X = np.array(X)
+        r_fixed = 1000*np.array([X_array[i][1] 
+                                 for _ in range(X.shape[0])])
+        zs = X[:, 2]
+        phis = X[:, 1]
+        print("shapes: {0}, {1}, {2}".format(zs.shape, phis.shape, r_fixed.shape))
+        #for j in range(X.shape[0]):
+        #    z, phi = X[j][2], X[j][1]
+        ax.plot(zs, phis, r_fixed, c=colors[i], lw=0, marker='s', ms=1)
+            
+    plt.show()
 
 def plotSingleHist(data, x_label, y_label, bins, weights=None, title='', color='blue'):
     """ plotSingleHist(): generic function for histogramming a data array
@@ -89,8 +158,8 @@ def plotQuant(x, y, up, down, xlabel, ylabel, title='',
 def plotXY(x, y, x_label, y_label, yerr = [], title='', color='blue', save_fig=False):
     """ generic function for scatter plotting
     """
-    if (len(yerr) == 0): plt.scatter(x, y, c=color)
-    else: plt.errorbar(x, y, yerr=yerr, c=color, capsize=1, ls='', lw=1, marker='.')
+    if (len(yerr) == 0): plt.scatter(x, y, c=color, lw=0, marker='s', s=8)
+    else: plt.errorbar(x, y, yerr=yerr, c=color, capsize=1, ls='', lw=0, marker='s')
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     if (save_fig): plt.savefig(title+'.png', dpi=1200)
