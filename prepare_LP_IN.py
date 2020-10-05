@@ -6,6 +6,7 @@ This script processes the TrackML dataset and produces graph data on disk.
 
 # System
 import os
+import time
 import argparse
 import logging
 import multiprocessing as mp
@@ -57,6 +58,7 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max,
     Returns: pd DataFrame of (index_1, index_2), corresponding to the
     DataFrame hit label-indices in hits1 and hits2, respectively.
     """
+    
     # Start with all possible pairs of hits
     keys = ['evtid', 'r', 'phi', 'z']
     hit_pairs = hits1[keys].reset_index().merge(
@@ -74,12 +76,12 @@ def select_segments(hits1, hits2, phi_slope_max, z0_max,
     if remove_intersecting_edges:
         
         # Innermost barrel layer --> innermost L,R endcap layers
-        if (layer1 == 0) and (layer2 == 4 or layer2 == 10):
+        if (layer1 == 0) and (layer2 == 11 or layer2 == 10):
             z_coord = 71.56298065185547 * dz/dr + z0
-            intersected_layer = (z_coord > -490.975) & (z_coord < 490.975)
-        if (layer1 == 1) and (layer2 == 4 or layer2 == 10):
+            intersected_layer = np.logical_and(z_coord > -490.975, z_coord < 490.975)
+        if (layer1 == 1) and (layer2 == 11 or layer2 == 10):
             z_coord = 115.37811279296875 * dz / dr + z0
-            intersected_layer = (z_coord > -490.975) & (z_coord < 490.975)
+            intersected_layer = np.logical_and(z_coord > -490.975, z_coord < 490.975)
         
     # Filter segments according to criteria
     good_seg_mask = (phi_slope.abs() < phi_slope_max) & (z0.abs() < z0_max) & (intersected_layer == False)
@@ -90,7 +92,9 @@ def construct_graph(hits, layer_pairs, phi_slope_max, z0_max,
                     feature_names, feature_scale, evtid="-1",
                     remove_intersecting_edges = False):
     """Construct one graph (e.g. from one event)"""
-
+    
+    t0 = time.time()
+    
     # Loop over layer pairs and construct segments
     layer_groups = hits.groupby('layer')
     segments = []
@@ -105,9 +109,10 @@ def construct_graph(hits, layer_pairs, phi_slope_max, z0_max,
             logging.info('skipping empty layer: %s' % e)
             continue
         # Construct the segments
-        #print("layer1, layer2 = ", hits1, hits2)
-        segments.append(select_segments(hits1, hits2, layer1, layer2,
-                                        phi_slope_max, z0_max))
+        selected = select_segments(hits1, hits2, phi_slope_max, z0_max,
+                                   layer1, layer2)
+        segments.append(selected)#select_segments(hits1, hits2, layer1, layer2,
+                         #               phi_slope_max, z0_max))
     # Combine segments from all layer pairs
     segments = pd.concat(segments)
 
@@ -141,6 +146,14 @@ def construct_graph(hits, layer_pairs, phi_slope_max, z0_max,
     pid2 = hits.particle_id.loc[segments.index_2].values
     y[:] = (pid1 == pid2)
     # Return a tuple of the results
+    
+    print("took {0} seconds".format(time.time()-t0))
+    
+    print("X.shape", X.shape)
+    print("Ri.shape", Ri.shape)
+    print("Ro.shape", Ro.shape)
+    print("y.shape", y.shape)
+    print("a.shape", a.shape)
     return Graph(X, Ri, Ro, y, a)
 
 def select_hits(hits, truth, particles, pt_min=0, endcaps=False):
@@ -174,6 +187,7 @@ def select_hits(hits, truth, particles, pt_min=0, endcaps=False):
     hits = hits.loc[
         hits.groupby(['particle_id', 'layer'], as_index=False).r.idxmin()
     ]
+    
     return hits
 
 def split_detector_sections(hits, phi_edges, eta_edges):
